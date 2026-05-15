@@ -153,6 +153,7 @@ func Run() {
 			userRoutes.PATCH("/me", userHandler.UpdateMe)
 			userRoutes.PATCH("/me/password", userHandler.ChangePassword)
 			userRoutes.PATCH("/:id/promote", middleware.RequireRoles("admin"), userHandler.PromoteToAdmin)
+			userRoutes.DELETE("/me", userHandler.DeleteAccount)
 
 			accountRoutes := protected.Group("/accounts")
 			accountRoutes.GET("", accountHandler.List)

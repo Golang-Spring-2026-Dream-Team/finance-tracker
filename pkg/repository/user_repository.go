@@ -54,6 +54,10 @@ func (r *UserRepository) UpdateRole(ctx context.Context, userID int64, role stri
 	})
 }
 
+func (r *UserRepository) DeleteUser(ctx context.Context, userID int64) (sqlc.User, error) {
+	return r.q.DeleteUser(ctx, userID)
+}
+
 func (r *UserRepository) InsertRefreshToken(ctx context.Context, userID int64, tokenHash string, expiresAt pgtype.Timestamptz) error {
 	_, err := r.q.InsertRefreshToken(ctx, sqlc.InsertRefreshTokenParams{
 		UserID:    userID,
