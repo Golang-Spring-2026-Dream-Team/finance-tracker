@@ -22,12 +22,12 @@ import (
 	"finance-tracker/db/migrations"
 	sqlc "finance-tracker/db/queries"
 	_ "finance-tracker/docs"
+	grpc "finance-tracker/internal/grpc"
 	"finance-tracker/pkg/cache"
 	"finance-tracker/pkg/handler"
 	"finance-tracker/pkg/middleware"
 	"finance-tracker/pkg/repository"
 	"finance-tracker/pkg/service"
-	grpc "finance-tracker/internal/grpc"
 
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
