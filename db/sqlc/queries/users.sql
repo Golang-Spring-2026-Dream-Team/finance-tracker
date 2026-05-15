@@ -43,6 +43,14 @@ WHERE id = $1
   AND is_active = TRUE
 RETURNING *;
 
+-- name: DeleteUser :one
+UPDATE users
+SET deleted_at = NOW(),
+    is_active = FALSE,
+    updated_at = NOW()
+WHERE id = $1
+RETURNING *;
+
 -- name: InsertRefreshToken :one
 INSERT INTO refresh_tokens (user_id, token_hash, expires_at)
 VALUES ($1, $2, $3)

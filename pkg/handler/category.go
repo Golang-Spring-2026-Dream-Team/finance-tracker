@@ -28,6 +28,15 @@ func NewCategoryHandler(svc *service.CategoryService) *CategoryHandler {
 	return &CategoryHandler{svc: svc}
 }
 
+// List godoc
+// @Summary List categories
+// @Description List all categories for the authenticated user.
+// @Tags categories
+// @Security BearerAuth
+// @Produce json
+// @Success 200 {array} models.Category
+// @Failure 401 {object} apperror.ErrorEnvelope
+// @Router /api/v1/categories [get]
 func (h *CategoryHandler) List(c *gin.Context) {
 	userID, ok := middleware.UserIDFromContext(c)
 	if !ok {
@@ -42,6 +51,18 @@ func (h *CategoryHandler) List(c *gin.Context) {
 	c.JSON(http.StatusOK, out)
 }
 
+// Create godoc
+// @Summary Create category
+// @Description Create a new category for the authenticated user.
+// @Tags categories
+// @Security BearerAuth
+// @Accept json
+// @Produce json
+// @Param request body models.CreateCategoryRequest true "Create category payload"
+// @Success 201 {object} models.Category
+// @Failure 400 {object} apperror.ErrorEnvelope
+// @Failure 401 {object} apperror.ErrorEnvelope
+// @Router /api/v1/categories [post]
 func (h *CategoryHandler) Create(c *gin.Context) {
 	userID, ok := middleware.UserIDFromContext(c)
 	if !ok {
@@ -61,6 +82,20 @@ func (h *CategoryHandler) Create(c *gin.Context) {
 	c.JSON(http.StatusCreated, out)
 }
 
+// Update godoc
+// @Summary Update category
+// @Description Update an existing category.
+// @Tags categories
+// @Security BearerAuth
+// @Accept json
+// @Produce json
+// @Param id path int true "Category ID"
+// @Param request body models.UpdateCategoryRequest true "Update category payload"
+// @Success 200 {object} models.Category
+// @Failure 400 {object} apperror.ErrorEnvelope
+// @Failure 401 {object} apperror.ErrorEnvelope
+// @Failure 404 {object} apperror.ErrorEnvelope
+// @Router /api/v1/categories/{id} [patch]
 func (h *CategoryHandler) Update(c *gin.Context) {
 	userID, ok := middleware.UserIDFromContext(c)
 	if !ok {
@@ -85,6 +120,16 @@ func (h *CategoryHandler) Update(c *gin.Context) {
 	c.JSON(http.StatusOK, out)
 }
 
+// Delete godoc
+// @Summary Delete category
+// @Description Delete a category by ID.
+// @Tags categories
+// @Security BearerAuth
+// @Param id path int true "Category ID"
+// @Success 204
+// @Failure 401 {object} apperror.ErrorEnvelope
+// @Failure 404 {object} apperror.ErrorEnvelope
+// @Router /api/v1/categories/{id} [delete]
 func (h *CategoryHandler) Delete(c *gin.Context) {
 	userID, ok := middleware.UserIDFromContext(c)
 	if !ok {

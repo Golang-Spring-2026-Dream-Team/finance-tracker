@@ -1,4 +1,4 @@
-.PHONY: help run dev test tidy fmt sqlc swagger gen docker-up docker-down docker-logs docker-run docker-stop migrate
+.PHONY: help run dev test tidy fmt sqlc swagger gen docker-up docker-down docker-logs docker-run docker-stop migrate grpc
 
 APP_PKG := ./cmd/api
 SWAG    := go run github.com/swaggo/swag/cmd/swag@v1.16.6
@@ -66,3 +66,8 @@ docker-stop: docker-down
 migrate:
 	@command -v psql >/dev/null 2>&1 || { echo "psql not found. Install Postgres client tools."; exit 1; }
 	@psql "$(DATABASE_URL)" -f db/migrations/001_init.sql
+
+grpc:
+	buf generate
+	mv pb/proto/*.go pb/ 2>/dev/null || true
+	rm -rf pb/proto pb/finance-tracker

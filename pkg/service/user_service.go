@@ -19,6 +19,7 @@ type userServiceRepository interface {
 	UpdateProfile(ctx context.Context, userID int64, name, currency *string) (sqlc.User, error)
 	UpdatePassword(ctx context.Context, userID int64, passwordHash string) (sqlc.User, error)
 	UpdateRole(ctx context.Context, userID int64, role string) (sqlc.User, error)
+	DeleteUser(ctx context.Context, userID int64) (sqlc.User, error)
 }
 
 func NewUserService(users *repository.UserRepository) *UserService {
@@ -72,6 +73,15 @@ func (s *UserService) PromoteToAdmin(ctx context.Context, userID int64) (*models
 	user, err := s.users.UpdateRole(ctx, userID, "admin")
 	if err != nil {
 		return nil, apperror.NotFound("user not found")
+	}
+	out := mapUser(user)
+	return &out, nil
+}
+
+func (s *UserService) DeleteUser(ctx context.Context, userID int64) (*models.User, *apperror.Error) {
+	user, err := s.users.DeleteUser(ctx, userID)
+	if err != nil {
+		return nil, apperror.Internal("failed to delete user")
 	}
 	out := mapUser(user)
 	return &out, nil

@@ -151,6 +151,7 @@ type fakeUserRepo struct {
 	updateProfileFn  func(ctx context.Context, userID int64, name, currency *string) (sqlc.User, error)
 	updatePasswordFn func(ctx context.Context, userID int64, passwordHash string) (sqlc.User, error)
 	updateRoleFn     func(ctx context.Context, userID int64, role string) (sqlc.User, error)
+	deleteUserFn     func(ctx context.Context, userID int64) (sqlc.User, error)
 }
 
 func (f *fakeUserRepo) GetByID(ctx context.Context, userID int64) (sqlc.User, error) {
@@ -167,6 +168,10 @@ func (f *fakeUserRepo) UpdatePassword(ctx context.Context, userID int64, passwor
 
 func (f *fakeUserRepo) UpdateRole(ctx context.Context, userID int64, role string) (sqlc.User, error) {
 	return f.updateRoleFn(ctx, userID, role)
+}
+
+func (f *fakeUserRepo) DeleteUser(ctx context.Context, userID int64) (sqlc.User, error) {
+	return f.deleteUserFn(ctx, userID)
 }
 
 type fakePinger struct {

@@ -21,6 +21,7 @@ type userService interface {
 	UpdateMe(ctx context.Context, userID int64, req models.UpdateMeRequest) (*models.User, *apperror.Error)
 	ChangePassword(ctx context.Context, userID int64, req models.ChangePasswordRequest) *apperror.Error
 	PromoteToAdmin(ctx context.Context, userID int64) (*models.User, *apperror.Error)
+	DeleteUser(ctx context.Context, userID int64) (*models.User, *apperror.Error)
 }
 
 func NewUserHandler(userService *service.UserService) *UserHandler {
@@ -142,6 +143,31 @@ func (h *UserHandler) PromoteToAdmin(c *gin.Context) {
 	}
 
 	out, appErr := h.userService.PromoteToAdmin(c.Request.Context(), targetUserID)
+	if appErr != nil {
+		writeError(c, appErr)
+		return
+	}
+	c.JSON(http.StatusOK, out)
+}
+
+// DeleteAccount godoc
+// @Summary Delete account
+// @Description Soft-delete authenticated user's account.
+// @Tags users
+// @Security BearerAuth
+// @Produce json
+// @Success 200 {object} User
+// @Failure 401 {object} ErrorEnvelope
+// @Failure 500 {object} ErrorEnvelope
+// @Router /api/v1/users/me [delete]
+func (h *UserHandler) DeleteAccount(c *gin.Context) {
+	userID, ok := middleware.UserIDFromContext(c)
+	if !ok {
+		writeError(c, apperror.Unauthorized("invalid token context"))
+		return
+	}
+
+	out, appErr := h.userService.DeleteUser(c.Request.Context(), userID)
 	if appErr != nil {
 		writeError(c, appErr)
 		return
