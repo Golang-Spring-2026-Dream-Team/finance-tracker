@@ -1,0 +1,67 @@
+syntax = "proto3";
+package finance.v1;
+option go_package = "finance-tracker/pb;pb";
+
+service TransactionService {
+  rpc Create(CreateTransactionRequest) returns (Transaction);
+  rpc List(ListTransactionsRequest) returns (ListTransactionsResponse);
+  rpc Get(GetTransactionRequest) returns (Transaction);
+  rpc Update(UpdateTransactionRequest) returns (Transaction);
+  rpc Delete(DeleteTransactionRequest) returns (DeleteTransactionResponse);
+}
+
+message Transaction {
+  int64 id = 1;
+  int64 account_id = 2;
+  optional int64 category_id = 3;
+  string amount = 4;
+  string currency = 5;
+  string type = 6;
+  string description = 7;
+  optional string notes = 8;
+  string transacted_at = 9;
+  string created_at = 10;
+  string updated_at = 11;
+}
+
+message ListTransactionsResponse {
+  repeated Transaction transactions = 1;
+}
+
+message CreateTransactionRequest {
+  int64 account_id = 1;
+  optional int64 category_id = 2;
+  string amount = 3;
+  string currency = 4;
+  string type = 5;
+  string description = 8;
+  optional string notes = 9;
+  string transacted_at = 10;
+}
+
+message ListTransactionsRequest {
+  int64 account_id = 1;
+  int64 category_id = 2;
+  string type = 3;
+  string from = 4;
+  string to = 5;
+  int64 page = 6;
+  int64 limit = 7;
+}
+
+message GetTransactionRequest {
+  int64 transaction_id = 1;
+}
+
+message UpdateTransactionRequest {
+  int64 transaction_id = 1;
+  optional string amount = 2;
+  optional int64 category_id = 3;
+  optional string notes = 4;
+}
+
+message DeleteTransactionRequest {
+  int64 transaction_id = 1;
+}
+
+message DeleteTransactionResponse {}

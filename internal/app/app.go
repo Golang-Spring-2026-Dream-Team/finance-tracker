@@ -27,6 +27,7 @@ import (
 	"finance-tracker/pkg/middleware"
 	"finance-tracker/pkg/repository"
 	"finance-tracker/pkg/service"
+	grpc "finance-tracker/internal/grpc"
 
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
@@ -199,6 +200,27 @@ func Run() {
 			recurringRoutes.DELETE("/:id", recurringHandler.Delete)
 		}
 	}
+
+	// Start gRPC server on port 50051
+	gRPCPort := ":" + getenv("GRPC_PORT", "50051")
+	go func() {
+		srv := grpc.NewServer(txService, jwtSecret)
+		if err := srv.Serve(gRPCPort); err != nil {
+			log.Printf("gRPC server error: %v", err)
+		}
+	}()
+
+	// Start HTTP proxy for gRPC on port 50052
+	proxyPort := ":" + getenv("GRPC_PROXY_PORT", "50052")
+	proxy := grpc.NewHTTPProxy(gRPCPort)
+	go func() {
+		mux := http.NewServeMux()
+		mux.HandleFunc("/grpc", proxy.Handle)
+		log.Printf("gRPC HTTP proxy listening on %s", proxyPort)
+		if err := http.ListenAndServe(proxyPort, mux); err != nil {
+			log.Printf("gRPC proxy error: %v", err)
+		}
+	}()
 
 	log.Println("server running on port", port)
 	if err = router.Run(":" + port); err != nil {

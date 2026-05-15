@@ -32,6 +32,10 @@ type userServiceSpy struct {
 	promoteToAdminFn    func(ctx context.Context, userID int64) (*models.User, *apperror.Error)
 	promoteToAdminCalls int
 	promoteToAdminID    int64
+
+	deleteUserFn    func(ctx context.Context, userID int64) (*models.User, *apperror.Error)
+	deleteUserCalls int
+	deleteUserID    int64
 }
 
 func (s *userServiceSpy) Me(ctx context.Context, userID int64) (*models.User, *apperror.Error) {
@@ -70,6 +74,15 @@ func (s *userServiceSpy) PromoteToAdmin(ctx context.Context, userID int64) (*mod
 		panic("unexpected call: PromoteToAdmin")
 	}
 	return s.promoteToAdminFn(ctx, userID)
+}
+
+func (s *userServiceSpy) DeleteUser(ctx context.Context, userID int64) (*models.User, *apperror.Error) {
+	s.deleteUserCalls++
+	s.deleteUserID = userID
+	if s.deleteUserFn == nil {
+		panic("unexpected call: DeleteUser")
+	}
+	return s.deleteUserFn(ctx, userID)
 }
 
 func TestNewUserHandler(t *testing.T) {
