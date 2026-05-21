@@ -124,6 +124,7 @@ func (r *TransactionRepository) CreateForUser(
 	ctx context.Context,
 	userID int64,
 	params sqlc.CreateTransactionParams,
+	toAccountID *int64,
 ) (sqlc.Transaction, error) {
 	tx, err := r.pool.BeginTx(ctx, pgx.TxOptions{})
 	if err != nil {
@@ -133,13 +134,32 @@ func (r *TransactionRepository) CreateForUser(
 
 	qtx := r.q.WithTx(tx)
 
-	_, err = qtx.GetAccountByIDForUserForUpdate(ctx, sqlc.GetAccountByIDForUserForUpdateParams{
+	source, err := qtx.GetAccountByIDForUserForUpdate(ctx, sqlc.GetAccountByIDForUserForUpdateParams{
 		ID:     params.AccountID,
 		UserID: userID,
 	})
 	if err != nil {
 		return sqlc.Transaction{}, err
 	}
+
+	// For transfers, lock and validate the destination account.
+	var target sqlc.Account
+	if toAccountID != nil {
+		target, err = qtx.GetAccountByIDForUserForUpdate(ctx, sqlc.GetAccountByIDForUserForUpdateParams{
+			ID:     *toAccountID,
+			UserID: userID,
+		})
+		if err != nil {
+			return sqlc.Transaction{}, err
+		}
+		if source.Currency != target.Currency {
+			return sqlc.Transaction{}, fmt.Errorf("currency mismatch between accounts")
+		}
+		if !decimalGreaterOrEqual(numericToString4(source.Balance), numericToString4(params.Amount)) {
+			return sqlc.Transaction{}, fmt.Errorf("insufficient funds in source account")
+		}
+	}
+
 	if params.CategoryID.Valid {
 		if _, err = qtx.CategoryAccessibleForUser(ctx, sqlc.CategoryAccessibleForUserParams{
 			ID:     params.CategoryID.Int64,
@@ -170,6 +190,27 @@ func (r *TransactionRepository) CreateForUser(
 	})
 	if err != nil {
 		return sqlc.Transaction{}, err
+	}
+
+	// Apply the incoming side of a transfer to the destination account:
+	// savings/wallets receive funds (+amount); a loan has its remaining debt reduced (-amount).
+	if toAccountID != nil {
+		targetDelta := numericToString4(params.Amount)
+		if target.AccountType == "loan" {
+			targetDelta = "-" + targetDelta
+		}
+		targetNum, err := stringToNumeric(targetDelta)
+		if err != nil {
+			return sqlc.Transaction{}, err
+		}
+		_, err = qtx.UpdateAccountBalanceDeltaByIDForUser(ctx, sqlc.UpdateAccountBalanceDeltaByIDForUserParams{
+			ID:      *toAccountID,
+			UserID:  userID,
+			Balance: targetNum,
+		})
+		if err != nil {
+			return sqlc.Transaction{}, err
+		}
 	}
 
 	if err := tx.Commit(ctx); err != nil {

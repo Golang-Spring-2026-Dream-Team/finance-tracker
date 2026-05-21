@@ -27,7 +27,7 @@ func TestAccountService_Create(t *testing.T) {
 
 	t.Run("creates account", func(t *testing.T) {
 		repo := &fakeAccountRepo{
-			createFn: func(_ context.Context, userID int64, name, accountType, currency, balance string) (account sqlc.Account, err error) {
+			createFn: func(_ context.Context, userID int64, name, accountType, currency, balance string, _, _, _, _ *string) (account sqlc.Account, err error) {
 				if userID != 42 || name != "Cash" || accountType != "cash" || currency != "USD" || balance != "10.5000" {
 					t.Fatalf("unexpected create args: %d %s %s %s %s", userID, name, accountType, currency, balance)
 				}

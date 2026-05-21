@@ -12,9 +12,9 @@ import (
 
 type fakeAccountRepo struct {
 	listByUserFn        func(ctx context.Context, userID int64) ([]sqlc.Account, error)
-	createFn            func(ctx context.Context, userID int64, name, accountType, currency, balance string) (sqlc.Account, error)
+	createFn            func(ctx context.Context, userID int64, name, accountType, currency, balance string, interestRate, targetAmount, loanTotalAmount, maturityDate *string) (sqlc.Account, error)
 	getByIDForUserFn    func(ctx context.Context, accountID, userID int64) (sqlc.Account, error)
-	updateByIDForUserFn func(ctx context.Context, accountID, userID int64, name, accountType, currency *string) (sqlc.Account, error)
+	updateByIDForUserFn func(ctx context.Context, accountID, userID int64, name, accountType, currency, interestRate, targetAmount, maturityDate, loanTotalAmount *string) (sqlc.Account, error)
 	softDeleteFn        func(ctx context.Context, accountID, userID int64) (int64, error)
 }
 
@@ -22,16 +22,16 @@ func (f *fakeAccountRepo) ListByUser(ctx context.Context, userID int64) ([]sqlc.
 	return f.listByUserFn(ctx, userID)
 }
 
-func (f *fakeAccountRepo) Create(ctx context.Context, userID int64, name, accountType, currency, balance string) (sqlc.Account, error) {
-	return f.createFn(ctx, userID, name, accountType, currency, balance)
+func (f *fakeAccountRepo) Create(ctx context.Context, userID int64, name, accountType, currency, balance string, interestRate, targetAmount, loanTotalAmount, maturityDate *string) (sqlc.Account, error) {
+	return f.createFn(ctx, userID, name, accountType, currency, balance, interestRate, targetAmount, loanTotalAmount, maturityDate)
 }
 
 func (f *fakeAccountRepo) GetByIDForUser(ctx context.Context, accountID, userID int64) (sqlc.Account, error) {
 	return f.getByIDForUserFn(ctx, accountID, userID)
 }
 
-func (f *fakeAccountRepo) UpdateByIDForUser(ctx context.Context, accountID, userID int64, name, accountType, currency *string) (sqlc.Account, error) {
-	return f.updateByIDForUserFn(ctx, accountID, userID, name, accountType, currency)
+func (f *fakeAccountRepo) UpdateByIDForUser(ctx context.Context, accountID, userID int64, name, accountType, currency, interestRate, targetAmount, maturityDate, loanTotalAmount *string) (sqlc.Account, error) {
+	return f.updateByIDForUserFn(ctx, accountID, userID, name, accountType, currency, interestRate, targetAmount, maturityDate, loanTotalAmount)
 }
 
 func (f *fakeAccountRepo) SoftDeleteByIDForUser(ctx context.Context, accountID, userID int64) (int64, error) {
@@ -40,7 +40,7 @@ func (f *fakeAccountRepo) SoftDeleteByIDForUser(ctx context.Context, accountID, 
 
 type fakeTransactionRepo struct {
 	listForUserFn    func(ctx context.Context, params sqlc.ListTransactionsForUserParams) ([]sqlc.Transaction, error)
-	createForUserFn  func(ctx context.Context, userID int64, params sqlc.CreateTransactionParams) (sqlc.Transaction, error)
+	createForUserFn  func(ctx context.Context, userID int64, params sqlc.CreateTransactionParams, toAccountID *int64) (sqlc.Transaction, error)
 	getByIDForUserFn func(ctx context.Context, txID, userID int64) (sqlc.Transaction, error)
 	updateForUserFn  func(ctx context.Context, userID, txID int64, params sqlc.UpdateTransactionByIDForUserParams) (sqlc.Transaction, error)
 	softDeleteFn     func(ctx context.Context, userID, txID int64) error
@@ -50,8 +50,8 @@ func (f *fakeTransactionRepo) ListForUser(ctx context.Context, params sqlc.ListT
 	return f.listForUserFn(ctx, params)
 }
 
-func (f *fakeTransactionRepo) CreateForUser(ctx context.Context, userID int64, params sqlc.CreateTransactionParams) (sqlc.Transaction, error) {
-	return f.createForUserFn(ctx, userID, params)
+func (f *fakeTransactionRepo) CreateForUser(ctx context.Context, userID int64, params sqlc.CreateTransactionParams, toAccountID *int64) (sqlc.Transaction, error) {
+	return f.createForUserFn(ctx, userID, params, toAccountID)
 }
 
 func (f *fakeTransactionRepo) GetByIDForUser(ctx context.Context, txID, userID int64) (sqlc.Transaction, error) {

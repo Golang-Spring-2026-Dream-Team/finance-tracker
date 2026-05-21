@@ -14,17 +14,37 @@ func NewAccountRepository(q *sqlc.Queries) *AccountRepository {
 	return &AccountRepository{q: q}
 }
 
-func (r *AccountRepository) Create(ctx context.Context, userID int64, name, accountType, currency, balance string) (sqlc.Account, error) {
+func (r *AccountRepository) Create(ctx context.Context, userID int64, name, accountType, currency, balance string, interestRate, targetAmount, loanTotalAmount, maturityDate *string) (sqlc.Account, error) {
 	numeric, err := stringToNumeric(balance)
 	if err != nil {
 		return sqlc.Account{}, err
 	}
+	ir, err := optionalNumericFromPtr(interestRate)
+	if err != nil {
+		return sqlc.Account{}, err
+	}
+	ta, err := optionalNumericFromPtr(targetAmount)
+	if err != nil {
+		return sqlc.Account{}, err
+	}
+	lta, err := optionalNumericFromPtr(loanTotalAmount)
+	if err != nil {
+		return sqlc.Account{}, err
+	}
+	md, err := optionalDateFromPtr(maturityDate)
+	if err != nil {
+		return sqlc.Account{}, err
+	}
 	return r.q.CreateAccount(ctx, sqlc.CreateAccountParams{
-		UserID:      userID,
-		Name:        name,
-		AccountType: accountType,
-		Balance:     numeric,
-		Currency:    currency,
+		UserID:          userID,
+		Name:            name,
+		AccountType:     accountType,
+		Balance:         numeric,
+		Currency:        currency,
+		InterestRate:    ir,
+		TargetAmount:    ta,
+		MaturityDate:    md,
+		LoanTotalAmount: lta,
 	})
 }
 
@@ -39,13 +59,33 @@ func (r *AccountRepository) GetByIDForUser(ctx context.Context, accountID, userI
 	})
 }
 
-func (r *AccountRepository) UpdateByIDForUser(ctx context.Context, accountID, userID int64, name, accountType, currency *string) (sqlc.Account, error) {
+func (r *AccountRepository) UpdateByIDForUser(ctx context.Context, accountID, userID int64, name, accountType, currency, interestRate, targetAmount, maturityDate, loanTotalAmount *string) (sqlc.Account, error) {
+	ir, err := optionalNumericFromPtr(interestRate)
+	if err != nil {
+		return sqlc.Account{}, err
+	}
+	ta, err := optionalNumericFromPtr(targetAmount)
+	if err != nil {
+		return sqlc.Account{}, err
+	}
+	lta, err := optionalNumericFromPtr(loanTotalAmount)
+	if err != nil {
+		return sqlc.Account{}, err
+	}
+	md, err := optionalDateFromPtr(maturityDate)
+	if err != nil {
+		return sqlc.Account{}, err
+	}
 	return r.q.UpdateAccountByIDForUser(ctx, sqlc.UpdateAccountByIDForUserParams{
-		ID:          accountID,
-		UserID:      userID,
-		Name:        textFromPtr(name),
-		AccountType: textFromPtr(accountType),
-		Currency:    textFromPtr(currency),
+		ID:              accountID,
+		UserID:          userID,
+		Name:            textFromPtr(name),
+		AccountType:     textFromPtr(accountType),
+		Currency:        textFromPtr(currency),
+		InterestRate:    ir,
+		TargetAmount:    ta,
+		MaturityDate:    md,
+		LoanTotalAmount: lta,
 	})
 }
 

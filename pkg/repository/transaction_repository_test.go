@@ -133,7 +133,7 @@ func TestTransactionRepository_CreateForUser(t *testing.T) {
 		AccountID: 7,
 		Amount:    mustNumericRepo("18.9000"),
 		Type:      "expense",
-	})
+	}, nil)
 
 	// Assert.
 	if err != nil {

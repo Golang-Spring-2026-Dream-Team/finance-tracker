@@ -13,14 +13,18 @@ type User struct {
 }
 
 type Account struct {
-	ID          int64     `json:"id"`
-	UserID      int64     `json:"user_id"`
-	Name        string    `json:"name"`
-	AccountType string    `json:"account_type"`
-	Balance     string    `json:"balance"`
-	Currency    string    `json:"currency"`
-	CreatedAt   time.Time `json:"created_at"`
-	UpdatedAt   time.Time `json:"updated_at"`
+	ID              int64     `json:"id"`
+	UserID          int64     `json:"user_id"`
+	Name            string    `json:"name"`
+	AccountType     string    `json:"account_type"`
+	Balance         string    `json:"balance"`
+	Currency        string    `json:"currency"`
+	InterestRate    *string   `json:"interest_rate,omitempty"`
+	TargetAmount    *string   `json:"target_amount,omitempty"`
+	MaturityDate    *string   `json:"maturity_date,omitempty"`
+	LoanTotalAmount *string   `json:"loan_total_amount,omitempty"`
+	CreatedAt       time.Time `json:"created_at"`
+	UpdatedAt       time.Time `json:"updated_at"`
 }
 
 type Transaction struct {
@@ -79,16 +83,24 @@ type ChangePasswordRequest struct {
 }
 
 type CreateAccountRequest struct {
-	Name        string `json:"name" binding:"required,min=1,max=120"`
-	AccountType string `json:"account_type" binding:"required,oneof=cash bank_card e_wallet"`
-	Currency    string `json:"currency" binding:"required,len=3,uppercase"`
-	Balance     string `json:"balance" binding:"omitempty"`
+	Name            string  `json:"name" binding:"required,min=1,max=120"`
+	AccountType     string  `json:"account_type" binding:"required,oneof=cash bank_card e_wallet savings loan"`
+	Currency        string  `json:"currency" binding:"required,len=3,uppercase"`
+	Balance         string  `json:"balance" binding:"omitempty"`
+	InterestRate    *string `json:"interest_rate" binding:"omitempty"`
+	TargetAmount    *string `json:"target_amount" binding:"omitempty"`
+	MaturityDate    *string `json:"maturity_date" binding:"omitempty,datetime=2006-01-02"`
+	LoanTotalAmount *string `json:"loan_total_amount" binding:"omitempty"`
 }
 
 type UpdateAccountRequest struct {
-	Name        *string `json:"name" binding:"omitempty,min=1,max=120"`
-	AccountType *string `json:"account_type" binding:"omitempty,oneof=cash bank_card e_wallet"`
-	Currency    *string `json:"currency" binding:"omitempty,len=3,uppercase"`
+	Name            *string `json:"name" binding:"omitempty,min=1,max=120"`
+	AccountType     *string `json:"account_type" binding:"omitempty,oneof=cash bank_card e_wallet savings loan"`
+	Currency        *string `json:"currency" binding:"omitempty,len=3,uppercase"`
+	InterestRate    *string `json:"interest_rate" binding:"omitempty"`
+	TargetAmount    *string `json:"target_amount" binding:"omitempty"`
+	MaturityDate    *string `json:"maturity_date" binding:"omitempty,datetime=2006-01-02"`
+	LoanTotalAmount *string `json:"loan_total_amount" binding:"omitempty"`
 }
 
 type ListTransactionsQuery struct {
@@ -103,6 +115,7 @@ type ListTransactionsQuery struct {
 
 type CreateTransactionRequest struct {
 	AccountID    int64   `json:"account_id" binding:"required,min=1"`
+	ToAccountID  *int64  `json:"to_account_id" binding:"omitempty,min=1"`
 	CategoryID   *int64  `json:"category_id" binding:"omitempty,min=1"`
 	Amount       string  `json:"amount" binding:"required"`
 	Currency     string  `json:"currency" binding:"required,len=3,uppercase"`

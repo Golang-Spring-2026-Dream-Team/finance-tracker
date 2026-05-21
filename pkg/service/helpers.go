@@ -98,7 +98,7 @@ func mapUser(in sqlc.User) models.User {
 }
 
 func mapAccount(in sqlc.Account) models.Account {
-	return models.Account{
+	a := models.Account{
 		ID:          in.ID,
 		UserID:      in.UserID,
 		Name:        in.Name,
@@ -108,6 +108,23 @@ func mapAccount(in sqlc.Account) models.Account {
 		CreatedAt:   timestamptzToTime(in.CreatedAt),
 		UpdatedAt:   timestamptzToTime(in.UpdatedAt),
 	}
+	if in.InterestRate.Valid {
+		s := numericToString4(in.InterestRate)
+		a.InterestRate = &s
+	}
+	if in.TargetAmount.Valid {
+		s := numericToString4(in.TargetAmount)
+		a.TargetAmount = &s
+	}
+	if in.MaturityDate.Valid {
+		s := dateToString(in.MaturityDate)
+		a.MaturityDate = &s
+	}
+	if in.LoanTotalAmount.Valid {
+		s := numericToString4(in.LoanTotalAmount)
+		a.LoanTotalAmount = &s
+	}
+	return a
 }
 
 func mapTransaction(in sqlc.Transaction) models.Transaction {
