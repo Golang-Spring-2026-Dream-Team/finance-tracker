@@ -71,3 +71,28 @@ func dateToString(d pgtype.Date) string {
 	}
 	return d.Time.Format("2006-01-02")
 }
+
+func optionalNumericFromPtr(v *string) (pgtype.Numeric, error) {
+	if v == nil {
+		return pgtype.Numeric{}, nil
+	}
+	return stringToNumeric(*v)
+}
+
+func optionalDateFromPtr(v *string) (pgtype.Date, error) {
+	if v == nil {
+		return pgtype.Date{}, nil
+	}
+	return dateFromString(*v)
+}
+
+// decimalGreaterOrEqual reports whether decimal string a >= b.
+// If either value cannot be parsed it returns true (does not block the operation).
+func decimalGreaterOrEqual(a, b string) bool {
+	ra, ok1 := new(big.Rat).SetString(a)
+	rb, ok2 := new(big.Rat).SetString(b)
+	if !ok1 || !ok2 {
+		return true
+	}
+	return ra.Cmp(rb) >= 0
+}

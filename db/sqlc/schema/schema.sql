@@ -24,13 +24,17 @@ CREATE TABLE accounts (
     id BIGSERIAL PRIMARY KEY,
     user_id BIGINT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
     name TEXT NOT NULL,
-    account_type TEXT NOT NULL CHECK (account_type IN ('cash', 'bank_card', 'e_wallet')),
+    account_type TEXT NOT NULL CHECK (account_type IN ('cash', 'bank_card', 'e_wallet', 'savings', 'loan')),
     balance NUMERIC(15,4) NOT NULL DEFAULT 0,
     currency TEXT NOT NULL DEFAULT 'USD',
     is_active BOOLEAN NOT NULL DEFAULT TRUE,
     created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
     updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-    deleted_at TIMESTAMPTZ
+    deleted_at TIMESTAMPTZ,
+    interest_rate     NUMERIC(8,4),
+    target_amount     NUMERIC(15,4),
+    maturity_date     DATE,
+    loan_total_amount NUMERIC(15,4)
 );
 
 CREATE TABLE categories (

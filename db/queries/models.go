@@ -9,16 +9,20 @@ import (
 )
 
 type Account struct {
-	ID          int64
-	UserID      int64
-	Name        string
-	AccountType string
-	Balance     pgtype.Numeric
-	Currency    string
-	IsActive    bool
-	CreatedAt   pgtype.Timestamptz
-	UpdatedAt   pgtype.Timestamptz
-	DeletedAt   pgtype.Timestamptz
+	ID              int64
+	UserID          int64
+	Name            string
+	AccountType     string
+	Balance         pgtype.Numeric
+	Currency        string
+	IsActive        bool
+	CreatedAt       pgtype.Timestamptz
+	UpdatedAt       pgtype.Timestamptz
+	DeletedAt       pgtype.Timestamptz
+	InterestRate    pgtype.Numeric
+	TargetAmount    pgtype.Numeric
+	MaturityDate    pgtype.Date
+	LoanTotalAmount pgtype.Numeric
 }
 
 type Budget struct {

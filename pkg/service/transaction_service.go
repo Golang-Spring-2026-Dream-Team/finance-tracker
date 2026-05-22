@@ -24,7 +24,7 @@ type TransactionService struct {
 
 type transactionRepository interface {
 	ListForUser(ctx context.Context, params sqlc.ListTransactionsForUserParams) ([]sqlc.Transaction, error)
-	CreateForUser(ctx context.Context, userID int64, params sqlc.CreateTransactionParams) (sqlc.Transaction, error)
+	CreateForUser(ctx context.Context, userID int64, params sqlc.CreateTransactionParams, toAccountID *int64) (sqlc.Transaction, error)
 	GetByIDForUser(ctx context.Context, txID, userID int64) (sqlc.Transaction, error)
 	UpdateForUser(ctx context.Context, userID, txID int64, params sqlc.UpdateTransactionByIDForUserParams) (sqlc.Transaction, error)
 	SoftDeleteForUser(ctx context.Context, userID, txID int64) error
@@ -82,6 +82,14 @@ func (s *TransactionService) Create(ctx context.Context, userID int64, req model
 	if !isPositiveDecimal(req.Amount) {
 		return nil, apperror.Validation("amount must be a positive decimal with up to 4 fraction digits")
 	}
+	if req.Type == "transfer" {
+		if req.ToAccountID == nil {
+			return nil, apperror.Validation("to_account_id is required for transfers")
+		}
+		if *req.ToAccountID == req.AccountID {
+			return nil, apperror.Validation("source and target accounts must differ")
+		}
+	}
 	date, err := dateFromString(req.TransactedAt)
 	if err != nil {
 		return nil, apperror.Validation(err.Error())
@@ -100,12 +108,19 @@ func (s *TransactionService) Create(ctx context.Context, userID int64, req model
 		Description:  req.Description,
 		Notes:        textFromPtr(req.Notes),
 		TransactedAt: date,
-	})
+	}, req.ToAccountID)
 	if err != nil {
-		if strings.Contains(strings.ToLower(err.Error()), "no rows") {
+		low := strings.ToLower(err.Error())
+		switch {
+		case strings.Contains(low, "no rows"):
 			return nil, apperror.NotFound("account not found")
+		case strings.Contains(low, "currency mismatch"):
+			return nil, apperror.Validation("source and target accounts must have the same currency")
+		case strings.Contains(low, "insufficient funds"):
+			return nil, apperror.Validation("insufficient funds in source account")
+		default:
+			return nil, apperror.Internal("failed to create transaction")
 		}
-		return nil, apperror.Internal("failed to create transaction")
 	}
 	if s.analyticsCache != nil {
 		_ = s.analyticsCache.InvalidateUser(ctx, userID)

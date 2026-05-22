@@ -15,9 +15,9 @@ type AccountService struct {
 
 type accountRepository interface {
 	ListByUser(ctx context.Context, userID int64) ([]sqlc.Account, error)
-	Create(ctx context.Context, userID int64, name, accountType, currency, balance string) (sqlc.Account, error)
+	Create(ctx context.Context, userID int64, name, accountType, currency, balance string, interestRate, targetAmount, loanTotalAmount, maturityDate *string) (sqlc.Account, error)
 	GetByIDForUser(ctx context.Context, accountID, userID int64) (sqlc.Account, error)
-	UpdateByIDForUser(ctx context.Context, accountID, userID int64, name, accountType, currency *string) (sqlc.Account, error)
+	UpdateByIDForUser(ctx context.Context, accountID, userID int64, name, accountType, currency, interestRate, targetAmount, maturityDate, loanTotalAmount *string) (sqlc.Account, error)
 	SoftDeleteByIDForUser(ctx context.Context, accountID, userID int64) (int64, error)
 }
 
@@ -43,7 +43,7 @@ func (s *AccountService) Create(ctx context.Context, userID int64, req models.Cr
 	} else if ok := isPositiveDecimal(req.Balance); !ok {
 		return nil, apperror.Validation("balance must be a positive decimal with up to 4 fraction digits")
 	}
-	row, err := s.accounts.Create(ctx, userID, req.Name, req.AccountType, req.Currency, req.Balance)
+	row, err := s.accounts.Create(ctx, userID, req.Name, req.AccountType, req.Currency, req.Balance, req.InterestRate, req.TargetAmount, req.LoanTotalAmount, req.MaturityDate)
 	if err != nil {
 		return nil, apperror.Internal("failed to create account")
 	}
@@ -61,10 +61,11 @@ func (s *AccountService) GetByID(ctx context.Context, userID, accountID int64) (
 }
 
 func (s *AccountService) Update(ctx context.Context, userID, accountID int64, req models.UpdateAccountRequest) (*models.Account, *apperror.Error) {
-	if req.Name == nil && req.AccountType == nil && req.Currency == nil {
+	if req.Name == nil && req.AccountType == nil && req.Currency == nil &&
+		req.InterestRate == nil && req.TargetAmount == nil && req.MaturityDate == nil && req.LoanTotalAmount == nil {
 		return nil, apperror.Validation("at least one field is required")
 	}
-	row, err := s.accounts.UpdateByIDForUser(ctx, accountID, userID, req.Name, req.AccountType, req.Currency)
+	row, err := s.accounts.UpdateByIDForUser(ctx, accountID, userID, req.Name, req.AccountType, req.Currency, req.InterestRate, req.TargetAmount, req.MaturityDate, req.LoanTotalAmount)
 	if err != nil {
 		return nil, apperror.NotFound("account not found")
 	}

@@ -58,7 +58,7 @@ func TestTransactionService_CreateUpdateDelete(t *testing.T) {
 	t.Run("create validates amount and maps no rows", func(t *testing.T) {
 		svc := &TransactionService{
 			txRepo: &fakeTransactionRepo{
-				createForUserFn: func(context.Context, int64, sqlc.CreateTransactionParams) (sqlc.Transaction, error) {
+				createForUserFn: func(context.Context, int64, sqlc.CreateTransactionParams, *int64) (sqlc.Transaction, error) {
 					return sqlc.Transaction{}, errors.New("no rows in result set")
 				},
 			},
@@ -134,7 +134,7 @@ func TestTransactionService_CreateUpdateDelete(t *testing.T) {
 		categoryID := int64(3)
 		notes := "weekly"
 		repo := &fakeTransactionRepo{
-			createForUserFn: func(_ context.Context, userID int64, params sqlc.CreateTransactionParams) (sqlc.Transaction, error) {
+			createForUserFn: func(_ context.Context, userID int64, params sqlc.CreateTransactionParams, _ *int64) (sqlc.Transaction, error) {
 				if userID != 42 || params.AccountID != 7 || !params.CategoryID.Valid || params.CategoryID.Int64 != categoryID {
 					t.Fatalf("unexpected create args: %+v", params)
 				}

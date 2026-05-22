@@ -12,17 +12,21 @@ import (
 )
 
 const createAccount = `-- name: CreateAccount :one
-INSERT INTO accounts (user_id, name, account_type, balance, currency)
-VALUES ($1, $2, $3, $4, $5)
-RETURNING id, user_id, name, account_type, balance, currency, is_active, created_at, updated_at, deleted_at
+INSERT INTO accounts (user_id, name, account_type, balance, currency, interest_rate, target_amount, maturity_date, loan_total_amount)
+VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
+RETURNING id, user_id, name, account_type, balance, currency, is_active, created_at, updated_at, deleted_at, interest_rate, target_amount, maturity_date, loan_total_amount
 `
 
 type CreateAccountParams struct {
-	UserID      int64
-	Name        string
-	AccountType string
-	Balance     pgtype.Numeric
-	Currency    string
+	UserID          int64
+	Name            string
+	AccountType     string
+	Balance         pgtype.Numeric
+	Currency        string
+	InterestRate    pgtype.Numeric
+	TargetAmount    pgtype.Numeric
+	MaturityDate    pgtype.Date
+	LoanTotalAmount pgtype.Numeric
 }
 
 func (q *Queries) CreateAccount(ctx context.Context, arg CreateAccountParams) (Account, error) {
@@ -32,6 +36,10 @@ func (q *Queries) CreateAccount(ctx context.Context, arg CreateAccountParams) (A
 		arg.AccountType,
 		arg.Balance,
 		arg.Currency,
+		arg.InterestRate,
+		arg.TargetAmount,
+		arg.MaturityDate,
+		arg.LoanTotalAmount,
 	)
 	var i Account
 	err := row.Scan(
@@ -45,12 +53,16 @@ func (q *Queries) CreateAccount(ctx context.Context, arg CreateAccountParams) (A
 		&i.CreatedAt,
 		&i.UpdatedAt,
 		&i.DeletedAt,
+		&i.InterestRate,
+		&i.TargetAmount,
+		&i.MaturityDate,
+		&i.LoanTotalAmount,
 	)
 	return i, err
 }
 
 const getAccountByIDForUser = `-- name: GetAccountByIDForUser :one
-SELECT id, user_id, name, account_type, balance, currency, is_active, created_at, updated_at, deleted_at
+SELECT id, user_id, name, account_type, balance, currency, is_active, created_at, updated_at, deleted_at, interest_rate, target_amount, maturity_date, loan_total_amount
 FROM accounts
 WHERE id = $1
   AND user_id = $2
@@ -76,12 +88,16 @@ func (q *Queries) GetAccountByIDForUser(ctx context.Context, arg GetAccountByIDF
 		&i.CreatedAt,
 		&i.UpdatedAt,
 		&i.DeletedAt,
+		&i.InterestRate,
+		&i.TargetAmount,
+		&i.MaturityDate,
+		&i.LoanTotalAmount,
 	)
 	return i, err
 }
 
 const getAccountByIDForUserForUpdate = `-- name: GetAccountByIDForUserForUpdate :one
-SELECT id, user_id, name, account_type, balance, currency, is_active, created_at, updated_at, deleted_at
+SELECT id, user_id, name, account_type, balance, currency, is_active, created_at, updated_at, deleted_at, interest_rate, target_amount, maturity_date, loan_total_amount
 FROM accounts
 WHERE id = $1
   AND user_id = $2
@@ -108,12 +124,16 @@ func (q *Queries) GetAccountByIDForUserForUpdate(ctx context.Context, arg GetAcc
 		&i.CreatedAt,
 		&i.UpdatedAt,
 		&i.DeletedAt,
+		&i.InterestRate,
+		&i.TargetAmount,
+		&i.MaturityDate,
+		&i.LoanTotalAmount,
 	)
 	return i, err
 }
 
 const listAccountsByUser = `-- name: ListAccountsByUser :many
-SELECT id, user_id, name, account_type, balance, currency, is_active, created_at, updated_at, deleted_at
+SELECT id, user_id, name, account_type, balance, currency, is_active, created_at, updated_at, deleted_at, interest_rate, target_amount, maturity_date, loan_total_amount
 FROM accounts
 WHERE user_id = $1
   AND deleted_at IS NULL
@@ -140,6 +160,10 @@ func (q *Queries) ListAccountsByUser(ctx context.Context, userID int64) ([]Accou
 			&i.CreatedAt,
 			&i.UpdatedAt,
 			&i.DeletedAt,
+			&i.InterestRate,
+			&i.TargetAmount,
+			&i.MaturityDate,
+			&i.LoanTotalAmount,
 		); err != nil {
 			return nil, err
 		}
@@ -179,19 +203,27 @@ UPDATE accounts
 SET name = COALESCE($3::text, name),
     account_type = COALESCE($4::text, account_type),
     currency = COALESCE($5::text, currency),
+    interest_rate = COALESCE($6::numeric, interest_rate),
+    target_amount = COALESCE($7::numeric, target_amount),
+    maturity_date = COALESCE($8::date, maturity_date),
+    loan_total_amount = COALESCE($9::numeric, loan_total_amount),
     updated_at = NOW()
 WHERE id = $1
   AND user_id = $2
   AND deleted_at IS NULL
-RETURNING id, user_id, name, account_type, balance, currency, is_active, created_at, updated_at, deleted_at
+RETURNING id, user_id, name, account_type, balance, currency, is_active, created_at, updated_at, deleted_at, interest_rate, target_amount, maturity_date, loan_total_amount
 `
 
 type UpdateAccountByIDForUserParams struct {
-	ID          int64
-	UserID      int64
-	Name        pgtype.Text
-	AccountType pgtype.Text
-	Currency    pgtype.Text
+	ID              int64
+	UserID          int64
+	Name            pgtype.Text
+	AccountType     pgtype.Text
+	Currency        pgtype.Text
+	InterestRate    pgtype.Numeric
+	TargetAmount    pgtype.Numeric
+	MaturityDate    pgtype.Date
+	LoanTotalAmount pgtype.Numeric
 }
 
 func (q *Queries) UpdateAccountByIDForUser(ctx context.Context, arg UpdateAccountByIDForUserParams) (Account, error) {
@@ -201,6 +233,10 @@ func (q *Queries) UpdateAccountByIDForUser(ctx context.Context, arg UpdateAccoun
 		arg.Name,
 		arg.AccountType,
 		arg.Currency,
+		arg.InterestRate,
+		arg.TargetAmount,
+		arg.MaturityDate,
+		arg.LoanTotalAmount,
 	)
 	var i Account
 	err := row.Scan(
@@ -214,6 +250,10 @@ func (q *Queries) UpdateAccountByIDForUser(ctx context.Context, arg UpdateAccoun
 		&i.CreatedAt,
 		&i.UpdatedAt,
 		&i.DeletedAt,
+		&i.InterestRate,
+		&i.TargetAmount,
+		&i.MaturityDate,
+		&i.LoanTotalAmount,
 	)
 	return i, err
 }
